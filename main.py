@@ -1,5 +1,6 @@
 from typing import Union
 from controllers.chatbot import th, my_local_tools, MODEL, client
+from lib.mongo import retrieve_product_by_id
 import fastapi
 from pydantic import BaseModel
 
@@ -40,6 +41,14 @@ async def receive_message(body: bodyMessage):
 	)
 	return {"message": response.choices[0].message.content}
 
+@app.get("/product/{product_id}")
+async def get_product(product_id: int):
+	# Logic to retrieve product by id
+	product = await retrieve_product_by_id(product_id)
+	if product:
+		return product
+	else:
+		raise fastapi.HTTPException(status_code=404, detail="Product not found")
 
 	# return {"message": message}
 

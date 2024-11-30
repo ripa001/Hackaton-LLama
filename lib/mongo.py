@@ -33,4 +33,14 @@ def vector_search(vector: List[float], mongo_coll: Collection, limit: int = 1, p
 	return results
 
 
+async def retrieve_product_by_id(product_id: int):
+	# Placeholder function to simulate database retrieval
+	# Replace with actual database query logic
+	products = {
+		1: {"id": 1, "name": "Product 1", "price": 10.0},
+		2: {"id": 2, "name": "Product 2", "price": 20.0},
+	}
+	return products.get(product_id)
+
+
 mongo = get_db()
