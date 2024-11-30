@@ -47,6 +47,7 @@ async def get_product(product_id: str):
 	product = retrieve_product_by_id(product_id)
 	if product:
 		product["_id"] = str(product["_id"])
+		product["store_id"] = str(product["store_id"])
 		return product
 	else:
 		raise fastapi.HTTPException(status_code=404, detail="Product not found")
