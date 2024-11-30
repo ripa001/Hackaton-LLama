@@ -2,6 +2,7 @@ from typing import Union
 from controllers.chatbot import th, my_local_tools, MODEL, client
 from lib.mongo import retrieve_product_by_id
 import fastapi
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 class bodyMessage(BaseModel): 
@@ -10,6 +11,19 @@ class bodyMessage(BaseModel):
 	longitude: float
 
 app = fastapi.FastAPI()
+
+origins = [
+    "http://localhost:3000",  # If running your frontend locally
+    "https://hacking-the-list.vercel.app/",  # Your deployed frontend domain
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allow specific origins
+    allow_credentials=True,  # Allow cookies and credentials
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # 
+)
 
 @app.post("/message")
 async def receive_message(body: bodyMessage):
