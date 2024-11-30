@@ -17,7 +17,7 @@ async def receive_message(body: bodyMessage):
 	message = body.message
 	latitude = body.latitude
 	longitude = body.longitude
-
+	print(message)
 	response = client.chat.completions.create(
 		model=MODEL,
 		messages=[{"role": "user", "content": message}],
@@ -25,11 +25,10 @@ async def receive_message(body: bodyMessage):
 		# a tool
 		tools=th.get_tools() + my_local_tools,
 	)
-
 	# Runs the Code Execution tool, gets the result,
 	# and appends it to the context
 	tool_run = th.run_tools(response)
-
+	print(tool_run)
 	# Appends the user message to the context
 	messages = [{"role": "user", "content": message}]
 	messages.extend(tool_run)
