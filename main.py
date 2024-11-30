@@ -38,12 +38,13 @@ async def receive_message(body: bodyMessage):
 	user = body.userId
 
 	chat = get_user_chat(user)
+	print(chat)
 	if chat:
 		messages = chat["chat"]
 	else:
 		messages = []
 
-	print(messages)
+	# print(messages)
 	response = client.chat.completions.create(
 		model=MODEL,
 		messages=[{"role": "user", "content": message}],
@@ -66,7 +67,7 @@ async def receive_message(body: bodyMessage):
 		# tools=th.get_tools(),
 	)
 	messages.append( {"message": response.choices[0].message.content})
-	upsert_user_chat({"chat": messages}, user)
+	upsert_user_chat(messages, user)
 
 	return {"message": response.choices[0].message.content}
 
