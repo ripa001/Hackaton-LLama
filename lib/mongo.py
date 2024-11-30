@@ -34,9 +34,9 @@ def vector_search(vector: List[float], mongo_coll: Collection, limit: int = 1, p
 	return results
 
 
-async def retrieve_product_by_id(product_id: str):
+def retrieve_product_by_id(product_id: str):
 
-    product = await mongo["products"].find_one({"_id": ObjectId(product_id)})
+    product = mongo["products"].find_one({"_id": ObjectId(product_id)})
     return product
 
 
