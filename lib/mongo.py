@@ -1,7 +1,7 @@
 from typing import List
 import pymongo
 from pymongo.collection import Collection
-from bson import ObjectId
+from bson.objectid import ObjectId
 
 from lib.config import MONGODB_URL
 
