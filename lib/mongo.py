@@ -39,5 +39,11 @@ def retrieve_product_by_id(product_id: str):
     product = mongo["products"].find_one({"_id": ObjectId(product_id)})
     return product
 
+def get_user_chat(user_id: str):
+    user = mongo["users"].find_one({"userId": user_id})
+    return user
+
+def upsert_user_chat(chat: list, user_id: str):
+    mongo["users"].update_one({"userId": user_id}, {"$set": {"chat": chat}}, upsert=True)
 
 mongo = get_db()

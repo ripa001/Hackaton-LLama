@@ -1,6 +1,6 @@
 from typing import Union
 from controllers.chatbot import th, my_local_tools, MODEL, client
-from lib.mongo import retrieve_product_by_id
+from lib.mongo import retrieve_product_by_id, get_user_chat, upsert_user_chat
 import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -9,6 +9,7 @@ class bodyMessage(BaseModel):
 	message: str
 	latitude: float
 	longitude: float
+	userId: str
 
 app = fastapi.FastAPI()
 
@@ -16,6 +17,8 @@ origins = [
     "http://localhost:3000",  # If running your frontend locally
     "https://hacking-the-list.vercel.app/",  # Your deployed frontend domain
 ]
+
+user_map = {}
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,7 +35,15 @@ async def receive_message(body: bodyMessage):
 	message = body.message
 	latitude = body.latitude
 	longitude = body.longitude
-	print(message)
+	user = body.userId
+
+	chat = get_user_chat(user)
+	if chat:
+		messages = chat["chat"]
+	else:
+		messages = []
+
+	print(messages)
 	response = client.chat.completions.create(
 		model=MODEL,
 		messages=[{"role": "user", "content": message}],
@@ -45,7 +56,8 @@ async def receive_message(body: bodyMessage):
 	tool_run = th.run_tools(response)
 	print(tool_run)
 	# Appends the user message to the context
-	messages = [{"role": "user", "content": message}]
+	# messages = [{"role": "user", "content": message}]
+	messages.append({"role": "user", "content": message})
 	messages.extend(tool_run)
 
 	response = client.chat.completions.create(
@@ -53,6 +65,9 @@ async def receive_message(body: bodyMessage):
 		messages=messages,
 		# tools=th.get_tools(),
 	)
+	messages.append( {"message": response.choices[0].message.content})
+	upsert_user_chat({"chat": messages}, user)
+
 	return {"message": response.choices[0].message.content}
 
 @app.get("/product/{product_id}")
