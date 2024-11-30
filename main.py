@@ -1,13 +1,23 @@
 from typing import Union
 from controllers.chatbot import th, my_local_tools, MODEL, client
 import fastapi
+from pydantic import BaseModel
+
+class bodyMessage(BaseModel): 
+	message: str
+	latitude: float
+	longitude: float
 
 app = fastapi.FastAPI()
 
 @app.post("/message")
-async def receive_message(message: str, latitude: float, longitude: float):
+async def receive_message(body: bodyMessage):
 	# Process the message and coordinates here
 	# return {"message": message, "latitude": latitude, "longitude": longitude}
+	message = body.message
+	latitude = body.latitude
+	longitude = body.longitude
+
 	response = client.chat.completions.create(
 		model=MODEL,
 		messages=[{"role": "user", "content": message}],
