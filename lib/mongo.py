@@ -1,6 +1,7 @@
 from typing import List
 import pymongo
 from pymongo.collection import Collection
+from bson import ObjectId
 
 from lib.config import MONGODB_URL
 
@@ -33,14 +34,10 @@ def vector_search(vector: List[float], mongo_coll: Collection, limit: int = 1, p
 	return results
 
 
-async def retrieve_product_by_id(product_id: int):
-	# Placeholder function to simulate database retrieval
-	# Replace with actual database query logic
-	products = {
-		1: {"id": 1, "name": "Product 1", "price": 10.0},
-		2: {"id": 2, "name": "Product 2", "price": 20.0},
-	}
-	return products.get(product_id)
+async def retrieve_product_by_id(product_id: str):
+
+    product = await mongo["products"].find_one({"_id": ObjectId(product_id)})
+    return product
 
 
 mongo = get_db()

@@ -42,10 +42,11 @@ async def receive_message(body: bodyMessage):
 	return {"message": response.choices[0].message.content}
 
 @app.get("/product/{product_id}")
-async def get_product(product_id: int):
+async def get_product(product_id: str):
 	# Logic to retrieve product by id
 	product = await retrieve_product_by_id(product_id)
 	if product:
+		product["_id"] = str(product["_id"])
 		return product
 	else:
 		raise fastapi.HTTPException(status_code=404, detail="Product not found")
