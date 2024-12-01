@@ -44,9 +44,11 @@ async def receive_message(body: bodyMessage):
 		messages = chat["chat"]
 	else:
 		messages = []
+		
 
 	# print(messages)
 	messages.append({"role": "user", "content": message})
+	messages.append({"role": "user", "content": f"User Position: latitude: {latitude}, longitude: {longitude}"})
 	response = client.chat.completions.create(
 		model=MODEL,
 		messages=messages,
