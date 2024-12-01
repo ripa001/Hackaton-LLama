@@ -36,7 +36,7 @@ def vector_search(vector: List[float], mongo_coll: Collection, limit: int = 1, p
 
 def retrieve_product_by_id(product_id: str):
 
-    product = mongo["products"].find_one({"_id": ObjectId(product_id)})
+    product = mongo["products"].find_one({"_id": ObjectId(product_id)}, {"_id": 0, "store_id": 0, "vector": 0})
     return product
 
 def clear_chat(user_id: str):

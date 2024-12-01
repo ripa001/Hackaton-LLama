@@ -45,7 +45,7 @@ my_local_tools = [
         "type": "function",
         "function": {
             "name": "get_cheapest_list_of_products",
-            "description": "Given a list of products, returns the cheapest list of products from the shops near the user. When you specify the list of products, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the list of products the user is looking for. If you are sending any other information, think again and remove any information that is not the list of products.",
+            "description": "Given a list of products, returns the cheapest list of products IN ITALIAN from the shops near the user. When you specify the list of products, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the list of products the user is looking for. If you are sending any other information, think again and remove any information that is not the list of products.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -99,7 +99,7 @@ def get_minor_price_shop(
             "$limit": 10
         },
         {
-            "$project": {"_id": 1, "distance": 1, "working_hours": 1, "city": 1, "zip_code": 1, "street": 1}
+            "$project": {"distance": 1, "working_hours": 1, "city": 1, "zip_code": 1, "street": 1}
         }
     ]))
 
@@ -130,7 +130,7 @@ def get_minor_price_shop(
             "$limit": 5
         },
         {
-            "$project": {"_id": 1, "store_id": 1, "price": 1, "full_name": 1, "description": 1}
+            "$project": {"_id": 0, "store_id": 1, "price": 1, "full_name": 1, "description": 1}
         }
     ]
 
@@ -157,7 +157,7 @@ def get_minor_price_shop(
         p["street"] = shop_infos[p["store_id"]]["street"]
         p["working_hours"] = shop_infos[p["store_id"]]["working_hours"]
 
-        p["_id"] = str(p["_id"])
+        # p["_id"] = str(p["_id"])
         p["store_id"] = str(p["store_id"])
 
     return str(prods)

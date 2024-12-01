@@ -60,6 +60,7 @@ You are an helpfull assistant helping users to find cheap products from local st
 The customers want those products as cheap as possible, but still caring about the distance to the store. \
 So, you should help them to find the store that has the cheapest product and is near to them, possibibly balancing the two depending on the your judgement. \
 Any other question from the users are to be ignored, and invite the user to don't go off topic. \
+Answer in the same language as the user. \
 If a user asks for a recipe or want to cook some dish, you should use the tool get_cheapest_list_of_products to find the cheapest products for the recipe. \
 IMPORTANT: Do not care about the user location, we will provide this information to the various tools that you'll use. \
 """}]
@@ -69,9 +70,6 @@ IMPORTANT: Do not care about the user location, we will provide this information
 	response = client.chat.completions.create(
 		model=MODEL,
 		messages=messages,
-		# messages=[{"role": "user", "content": message}],
-		# Passes Code Execution as
-		# a tool
 		tools=th.get_tools() + my_local_tools,
 	)
 
@@ -100,15 +98,13 @@ IMPORTANT: Do not care about the user location, we will provide this information
 				tool_call.function.arguments["long"] = longitude
 				tool_call.function.arguments = json.dumps(tool_call.function.arguments)
 
-				
-
 	tool_run = th.run_tools(response)
 	print("\ntool_run", tool_run, "\n")
 	messages.extend(tool_run)
 
 
 	if tool_call.function.name == "get_cheapest_list_of_products":
-		messages.append({"role": "user", "content": "Make a balanced choice between the cheapest products and the distance to the store and suggest a unique store and products that the user should by. "})
+		messages.append({"role": "user", "content": "Make a balanced choice between the cheapest products and the distance to the store and suggest to the user a unique store where to buy the products."})
 
 	response = client.chat.completions.create(
 		model=MODEL,
@@ -117,8 +113,6 @@ IMPORTANT: Do not care about the user location, we will provide this information
 	)
 
 	messages.append( {"role": "assistant", "content": response.choices[0].message.content})
-
-	print("\nresponse", messages[-1], "\n")
 
 	upsert_user_chat(messages, user)
 
@@ -131,7 +125,7 @@ async def get_product(product_id: str):
 	product = retrieve_product_by_id(product_id)
 	if product:
 		product["_id"] = str(product["_id"])
-		product["store_id"] = str(product["store_id"])
+		# product["store_id"] = str(product["store_id"])
 		return product
 	else:
 		raise fastapi.HTTPException(status_code=404, detail="Product not found")
