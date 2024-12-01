@@ -118,8 +118,8 @@ def get_minor_price_shop(
 
     for p in prods:
         p["_id"] = str(p["_id"])
-        p["store_id"] = str(p["store_id"])
         p["distance"] = shop_infos[p["store_id"]]["distance"]
+        p["store_id"] = str(p["store_id"])
 
     return str(prods)
 
