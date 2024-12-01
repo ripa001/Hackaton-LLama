@@ -41,7 +41,7 @@ def retrieve_product_by_id(product_id: str):
 
 def clear_chat(user_id: str):
     return mongo["users"].delete_one({"userId": user_id}).deleted_count > 0
-j
+
 def get_user_chat(user_id: str):
     user = mongo["users"].find_one({"userId": user_id})
     return user
