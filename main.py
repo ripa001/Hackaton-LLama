@@ -75,7 +75,7 @@ Do not care about the user location, we will provide this information to the var
                 tool_call.function.arguments["lat"] = latitude
                 tool_call.function.arguments["long"] = longitude
                 tool_call.function.arguments = json.dumps(tool_call.function.arguments)
-                print("tool_call", 	)
+                print("tool_call", tool_call	)
 
     tool_run = th.run_tools(response)
     mess_to_llm = messages + tool_run
