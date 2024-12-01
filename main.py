@@ -74,6 +74,7 @@ IMPORTANT: Do not care about the user location, we will provide this information
                 tool_call.function.arguments["long"] = longitude
                 tool_call.function.arguments = json.dumps(tool_call.function.arguments)
                 print("tool_call", tool_call	)
+                
 
     tool_run = th.run_tools(response)
     print("\ntool_run", tool_run, "\n")
