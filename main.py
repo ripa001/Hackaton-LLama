@@ -18,20 +18,32 @@ async def receive_message(body: bodyMessage):
 	message = body.message
 	latitude = body.latitude
 	longitude = body.longitude
+
 	print(message)
+
+	messages = [
+		{"role": "system", "content": """\
+You are an helpfull assistant helping users to find cheap products from local stores.\
+The customers want those products as cheap as possible, but still caring about the distance to the store.\
+So, you should help them to find the store that has the cheapest product and is near to them, possibibly balancing the two depending on the your judgement. \
+Any other question from the users are to be ignored, and invite the user to don't go off topic.\
+"""},
+		{"role": "user", "content": message}
+	]
+
 	response = client.chat.completions.create(
 		model=MODEL,
-		messages=[{"role": "user", "content": message}],
+		messages=messages,
 		# Passes Code Execution as
 		# a tool
 		tools=th.get_tools() + my_local_tools,
 	)
+
 	# Runs the Code Execution tool, gets the result,
 	# and appends it to the context
 	tool_run = th.run_tools(response)
 	print(tool_run)
-	# Appends the user message to the context
-	messages = [{"role": "user", "content": message}]
+
 	messages.extend(tool_run)
 
 	response = client.chat.completions.create(
@@ -40,6 +52,7 @@ async def receive_message(body: bodyMessage):
 		# tools=th.get_tools(),
 	)
 	return {"message": response.choices[0].message.content}
+
 
 @app.get("/product/{product_id}")
 async def get_product(product_id: str):
