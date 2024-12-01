@@ -49,13 +49,11 @@ You are an helpfull assistant helping users to find cheap products from local st
 The customers want those products as cheap as possible, but still caring about the distance to the store. \
 So, you should help them to find the store that has the cheapest product and is near to them, possibibly balancing the two depending on the your judgement. \
 Any other question from the users are to be ignored, and invite the user to don't go off topic. \
-Do not care about the user location, we will provide this information to the various tools you can use. \
+IMPORTANT: Do not care about the user location, we will provide this information to the various tools that you'll use. \
 """}]
 
-
-    # print(messages)
     messages.append({"role": "user", "content": message})
-    # messages.append({"role": "user", "content": f"User Position: latitude: {latitude}, longitude: {longitude}"})
+
     response = client.chat.completions.create(
         model=MODEL,
         messages=messages,
@@ -78,23 +76,23 @@ Do not care about the user location, we will provide this information to the var
                 print("tool_call", tool_call	)
 
     tool_run = th.run_tools(response)
-    mess_to_llm = messages + tool_run
-
-    if len(tool_run) > 0:
-        # TODO check role
-        messages.append({"role": "user", "content": tool_run[-1]["content"]})
+    print("\ntool_run", tool_run, "\n")
+    messages.extend(tool_run)
 
     response = client.chat.completions.create(
         model=MODEL,
-        messages=mess_to_llm,
+        messages=messages,
         # tools=th.get_tools(),
     )
 
     messages.append( {"role": "assistant", "content": response.choices[0].message.content})
-    print(messages)
+
+    print("\nresponse", messages[-1], "\n")
+
     upsert_user_chat(messages, user)
 
     return {"message": messages[-1]["content"]}
+
 
 @app.get("/product/{product_id}")
 async def get_product(product_id: str):
@@ -106,28 +104,3 @@ async def get_product(product_id: str):
         return product
     else:
         raise fastapi.HTTPException(status_code=404, detail="Product not found")
-
-    # return {"message": message}
-
-
-    # response = client.chat.completions.create(
-    #     model=MODEL,
-    #     messages=messages,
-    #     # Passes Code Execution as a tool
-    #     tools=th.get_tools() + my_local_tools,
-    #     )
-
-    # # Runs the Code Execution tool, gets the result, 
-    # # and appends it to the context
-    # tool_run = th.run_tools(response)
-    # print(tool_run)
-    # messages.extend(tool_run)
-
-    # response = client.chat.completions.create(
-    # model=MODEL,
-    # messages=messages,
-    # #   tools=th.get_tools(),
-    # )
-
-    # print(response.choices[0].message.content)
-
