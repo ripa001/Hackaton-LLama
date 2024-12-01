@@ -110,7 +110,6 @@ IMPORTANT: Do not care about the user location, we will provide this information
 	response = client.chat.completions.create(
 		model=MODEL,
 		messages=messages,
-		# tools=th.get_tools(),
 	)
 
 	messages.append( {"role": "assistant", "content": response.choices[0].message.content})
@@ -122,11 +121,9 @@ IMPORTANT: Do not care about the user location, we will provide this information
 
 @app.get("/product/{product_id}")
 async def get_product(product_id: str):
-	# Logic to retrieve product by id
 	product = retrieve_product_by_id(product_id)
 	if product:
 		product["_id"] = str(product["_id"])
-		# product["store_id"] = str(product["store_id"])
 		return product
 	else:
 		raise fastapi.HTTPException(status_code=404, detail="Product not found")

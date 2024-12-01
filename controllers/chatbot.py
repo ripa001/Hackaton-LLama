@@ -1,15 +1,13 @@
 import os
-
 from toolhouse import Toolhouse
-# 👋 Make sure you've also installed the Groq SDK through: pip install groq
 from groq import Groq
 from lib  import mongo, vectors
 
 
 th = Toolhouse()
 client = Groq(api_key=os.getenv("API_KEY_GROQ"))
-# MODEL = "llama-3.1-8b-instant"
-MODEL = "llama-3.1-70b-versatile"
+MODEL = "llama-3.1-8b-instant"
+# MODEL = "llama-3.1-70b-versatile"
 # MODEL = "llama3-70b-8192"
 
 
@@ -162,30 +160,10 @@ def get_minor_price_shop(
 
     return str(prods)
 
-
-# def get_minor_price_shop_vector(product_name: str) -> str:
-
-#     vector = vectors.get_text_embedding(product_name)
-
-#     wanted_fields = ["_id", "full_name", "price", "store_id", "lat", "long"]
-
-#     docs = mongo.vector_search(vector, mongo.mongo["prods"], limit=10, projects={k: 1 for k in wanted_fields})
-
-#     docs.sort(key=lambda x: x["price"])
-
-#     for d in docs:
-#         d["_id"] = str(d["_id"])
-#         d["store_id"] = str(d["store_id"])
-#         d["distance"] = ((d["lat"] - 0) ** 2 + (d["long"] - 0) ** 2) ** 0.5
-
-#     return docs[:3]
-
-
 @th.register_local_tool("get_nearest_supermarket")
 def get_nearest_supermarket(
     # Must match the name of the parameters in your tool definition
     lat: float, long: float) -> str:
-    # data = list(mongo.mongo["stores"].aggregate([
     shop_ids = list(mongo.mongo["stores"].aggregate([
         {
             "$geoNear": {
