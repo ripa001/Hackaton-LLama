@@ -46,9 +46,11 @@ async def receive_message(body: bodyMessage):
 		messages = []
 
 	# print(messages)
+	messages.append({"role": "user", "content": message})
 	response = client.chat.completions.create(
 		model=MODEL,
-		messages=[{"role": "user", "content": message}],
+		messages=messages,
+		# messages=[{"role": "user", "content": message}],
 		# Passes Code Execution as
 		# a tool
 		tools=th.get_tools() + my_local_tools,
