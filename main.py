@@ -17,8 +17,6 @@ class UserBody(BaseModel):
 
 mongo["users"].delete_many({})
 
-
-
 app = fastapi.FastAPI()
 
 origins = [
