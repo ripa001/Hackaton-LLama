@@ -1,6 +1,6 @@
 from typing import Union
 from controllers.chatbot import th, my_local_tools, MODEL, client
-from lib.mongo import retrieve_product_by_id, get_user_chat, upsert_user_chat
+from lib.mongo import retrieve_product_by_id, get_user_chat, upsert_user_chat, clear_chat
 import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -28,6 +28,10 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],  # 
 )
+
+@app.post("/clear-chat")
+async def endpoint_clear_chat():
+    return {"success": clear_chat()}
 
 @app.post("/message")
 async def receive_message(body: bodyMessage):
