@@ -17,7 +17,7 @@ my_local_tools = [
         "type": "function",
         "function": {
             "name": "get_minor_price_shop",
-            "description": "Retrieves the document with the lowest price of a product, from already near-by shops. DO NOT WORRY ABOUT THE LOCALISATION, WE'LL CHECK THIS ON OUR END WITHIN THE TOOL! When you specify the product_name, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the product_name of the product you know. If you are sending any other information, think again and remove any information that is not product_name.",
+            "description": "Retrieves the document with the lowest price of a product, from already near-by shops. DO NOT WORRY ABOUT THE LOCALIZATION, WE'LL CHECK THIS ON OUR END WITHIN THE TOOL! When you specify the product_name, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the product_name of the product you know. If you are sending any other information, think again and remove any information that is not product_name.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -37,49 +37,41 @@ my_local_tools = [
         "type": "function",
         "function": {
             "name": "get_nearest_supermarket",
-            "description": "Retrieves the document with the nearest supermarket. When you specify the latitude and longitude, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the latitude and longitude of the user position. If you are sending any other information, think again and remove any information that is not latitude and longitude.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "latitude": {
-                        "type": "number",
-                        "description": "The latitude of the user.",
-                    },
-                    "longitude": {
-                        "type": "number",
-                        "description": "The longitude of the user.",
-                    },
-                },
-                "required": [
-                    "latitude",
-                    "longitude",
-                ],
-                "additionalProperties": False
-            },
+            "description": "When asked to find the nearest supermarket or shop this tool will return the nearest supermarkets to the user. DO NOT WORRY ABOUT THE LOCALIZATION, WE'LL CHECK THIS ON OUR END WITHIN THE TOOL!",
         }
     },
     {
         "type": "function",
         "function": {
-            "name": "get_ingredients_and_recipe_of_dish",
-            "description": "Retrieves the ingredients and the recipe of a given dish. When you specify the dish_name, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the dish_name of the dish you know. If you are sending any other information, think again and remove any information that is not dish_name.",
+            "name": "get_cheapest_list_of_products",
+            "description": "Given a list of products, returns the cheapest list of products from the shops near the user. When you specify the list of products, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the list of products the user is looking for. If you are sending any other information, think again and remove any information that is not the list of products.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "dish_name": {
-                        "type": "string",
-                        "description": "The name of the dish the user is looking for.",
+                    "products": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "description": "The name of the product the user is looking for, BUT MUST BE TRANSLATED IN ITALIAN.",
+                        },
                     }
                 },
                 "required": [
-                    "dish_name",
+                    "products",
                 ],
                 "additionalProperties": False
+                
             }
         }
     }
 ]
 
+@th.register_local_tool("get_cheapest_list_of_products")
+def get_cheapest_list_of_products(products: list, lat: float, long: float):
+    print("products", products)
+    list_shops = [get_minor_price_shop(p, lat, long) for p in products]
+    print("list_shops", list_shops)
+    return str(list_shops)
 
 @th.register_local_tool("get_minor_price_shop")
 def get_minor_price_shop(
@@ -87,13 +79,15 @@ def get_minor_price_shop(
     product_name_in_italian: str, lat: float, long: float) -> str:
     print("eureka, received the tool call, lat, long", lat, long)
 
+    
+
     # find top 10 shops close to the user
     shop_ids = list(mongo.mongo["stores"].aggregate([
         {
             "$geoNear": {
                 "near": {
                     "type": "Point",
-                    "coordinates": [float(long), float(lat)]
+                    "coordinates": [float(lat), float(long)]
                 },
                 "distanceField": "distance",
                 "maxDistance": 10000000,
@@ -111,11 +105,13 @@ def get_minor_price_shop(
     shop_infos = {s["_id"]: s for s in shop_ids}
     shop_ids = list(shop_infos.keys())
 
+    
     print("shop_infos", len(shop_infos), shop_infos[shop_ids[0]])
     print("shop_ids", shop_ids)
     print("product_name_in_italian", f'"{product_name_in_italian}"')
 
-    aggregate = [
+
+    aggregate = lambda name: [
         {
             "$match": {
                 "store_id": {"$in": shop_ids},
@@ -123,7 +119,7 @@ def get_minor_price_shop(
         },
         {
             "$match": {
-                "full_name": {"$regex": product_name_in_italian.lower().strip(), "$options": "imxs"}
+                "full_name": {"$regex": name.lower().strip(), "$options": "imxs"}
             }
         },
         {
@@ -136,11 +132,20 @@ def get_minor_price_shop(
             "$project": {"_id": 1, "store_id": 1, "price": 1, "full_name": 1, "description": 1}
         }
     ]
+
+
     print("aggregate", aggregate)
 
-    prods = list(mongo.mongo["products"].aggregate(aggregate))
+    prods = list(mongo.mongo["products"].aggregate(aggregate(product_name_in_italian)))
 
-    # if not len(prods):
+    if not len(prods):
+        name = product_name_in_italian.lower().strip().split(" ")
+        if len(name) > 1:
+            prods = list(mongo.mongo["products"].aggregate(aggregate(name[0])))
+            if not len(prods):
+                prods = list(mongo.mongo["products"].aggregate(aggregate(name[-1])))
+                return str(prods)
+
     #     prods = get_minor_price_shop_vector(product_name_in_italian)
 
     for p in prods:
@@ -178,14 +183,14 @@ def get_minor_price_shop(
 @th.register_local_tool("get_nearest_supermarket")
 def get_nearest_supermarket(
     # Must match the name of the parameters in your tool definition
-    latitude: float, longitude: float) -> str:
+    lat: float, long: float) -> str:
     # data = list(mongo.mongo["stores"].aggregate([
     shop_ids = list(mongo.mongo["stores"].aggregate([
         {
             "$geoNear": {
                 "near": {
                     "type": "Point",
-                    "coordinates": [float(longitude), float(latitude)]
+                    "coordinates": [float(lat), float(long)]
                 },
                 "distanceField": "distance",
                 "maxDistance": 10000000,
@@ -193,11 +198,15 @@ def get_nearest_supermarket(
             }
         },
         {
-            "$limit": 10
+            "$sort": {"distance": 1}
+        },
+        {
+            "$limit":5
         },
         {
             "$project": {"_id": 1, "distance": 1, "working_hours": 1, "city": 1, "zip_code": 1, "street": 1}
         }
+
     ]))
     print("shop_ids", shop_ids)
     return str(list(shop_ids))
