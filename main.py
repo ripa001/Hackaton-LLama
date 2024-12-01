@@ -38,6 +38,8 @@ async def receive_message(body: bodyMessage):
 	user = body.userId
 
 	chat = get_user_chat(user)
+
+	print("User chat", chat)
 	if chat:
 		messages = chat["chat"]
 	else:
@@ -57,6 +59,7 @@ async def receive_message(body: bodyMessage):
 	# Appends the user message to the context
 	# messages = [{"role": "user", "content": message}]
 	messages.append({"role": "user", "content": message})
+	print("tool_run", tool_run)
 	messages.extend(tool_run)
 
 	response = client.chat.completions.create(
@@ -68,7 +71,7 @@ async def receive_message(body: bodyMessage):
 	print(messages)
 	upsert_user_chat(messages, user)
 
-	return {"message": response.choices[0].message.content}
+	return {"message": messages[-1]["content"]}
 
 @app.get("/product/{product_id}")
 async def get_product(product_id: str):
