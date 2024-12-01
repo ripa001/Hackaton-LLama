@@ -1,3 +1,5 @@
 /hackaton-shop-venv
 .env
 
+**/.env
+**/__pycache__
