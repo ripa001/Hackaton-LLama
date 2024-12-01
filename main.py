@@ -66,7 +66,7 @@ async def receive_message(body: bodyMessage):
 		messages=messages,
 		# tools=th.get_tools(),
 	)
-	messages.append( {"message": response.choices[0].message.content})
+	messages.append( {"role": "assistant", "content": response.choices[0].message.content})
 	upsert_user_chat(messages, user)
 
 	return {"message": response.choices[0].message.content}
