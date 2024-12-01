@@ -72,10 +72,11 @@ IMPORTANT: Do not care about the user location, we will provide this information
 		messages=messages,
 		tools=th.get_tools() + my_local_tools,
 	)
-
+	selected_call = None
 	if response.choices[0].finish_reason == "tool_calls":
 
 		for tool_call in response.choices[0].message.tool_calls:
+			selected_call = tool_call
 			if tool_call.function.name == "get_minor_price_shop":
 
 				tool_call.function.arguments = json.loads(tool_call.function.arguments)
@@ -103,7 +104,7 @@ IMPORTANT: Do not care about the user location, we will provide this information
 	messages.extend(tool_run)
 
 
-	if tool_call.function.name == "get_cheapest_list_of_products":
+	if selected_call.function.name == "get_cheapest_list_of_products":
 		messages.append({"role": "user", "content": "Make a balanced choice between the cheapest products and the distance to the store and suggest to the user a unique store where to buy the products."})
 
 	response = client.chat.completions.create(
