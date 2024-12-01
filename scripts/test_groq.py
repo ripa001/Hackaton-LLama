@@ -33,31 +33,31 @@ my_local_tools = [
             }
         }
     },
-    # {
-    #     "type": "function",
-    #     "function": {
-    #         "name": "get_nearest_supermarket",
-    #         "description": "Retrieves the document with the nearest supermarket. When you specify the latitude and longitude, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the latitude and longitude of the user position. If you are sending any other information, think again and remove any information that is not latitude and longitude.",
-    #         "parameters": {
-    #             "type": "object",
-    #             "properties": {
-    #                 "latitude": {
-    #                     "type": "number",
-    #                     "description": "The latitude of the user.",
-    #                 },
-    #                 "longitude": {
-    #                     "type": "number",
-    #                     "description": "The longitude of the user.",
-    #                 },
-    #             },
-    #             "required": [
-    #                 "latitude",
-    #                 "longitude",
-    #             ],
-    #             "additionalProperties": False
-    #         },
-    #     }
-    # }
+    {
+        "type": "function",
+        "function": {
+            "name": "get_nearest_supermarket",
+            "description": "Retrieves the document with the nearest supermarket. When you specify the latitude and longitude, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the latitude and longitude of the user position. If you are sending any other information, think again and remove any information that is not latitude and longitude.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "latitude": {
+                        "type": "number",
+                        "description": "The latitude of the user.",
+                    },
+                    "longitude": {
+                        "type": "number",
+                        "description": "The longitude of the user.",
+                    },
+                },
+                "required": [
+                    "latitude",
+                    "longitude",
+                ],
+                "additionalProperties": False
+            },
+        }
+    }
 ]
 
 @th.register_local_tool("get_minor_price_shop")
@@ -100,11 +100,11 @@ def get_minor_price_shop(
                 "store_id": {"$in": shop_ids},
             }
         },
-        # {
-        #     "$match": {
-        #         "full_name": {"$regex": product_name_in_italian.lower().strip(), "$options": "imxs"}
-        #     }
-        # },
+        {
+            "$match": {
+                "full_name": {"$regex": product_name_in_italian.lower().strip(), "$options": "imxs"}
+            }
+        },
         {
             "$sort": {"price": 1}
         },
@@ -121,19 +121,16 @@ def get_minor_price_shop(
 
     # if not len(prods):
     #     prods = get_minor_price_shop_vector(product_name_in_italian)
-    if len(prods):
-        print("\n\nfound prods", len(prods), prods[0], "\n\n")
-    else:
-        print("\n\nno prods found\n\n")
 
     for p in prods:
-        p["_id"] = str(p["_id"])
-        p["store_id"] = str(p["store_id"])
-        p["distance"] = shop_infos[p["store_id"]]["distance"]
+        p["distance"] = shop_infos[p["store_id"]]["distance"]    
         p["zip_code"] = shop_infos[p["store_id"]]["zip_code"]
         p["city"] = shop_infos[p["store_id"]]["city"]
         p["street"] = shop_infos[p["store_id"]]["street"]
         p["working_hours"] = shop_infos[p["store_id"]]["working_hours"]
+
+        p["_id"] = str(p["_id"])
+        p["store_id"] = str(p["store_id"])
 
     return str(prods)
 

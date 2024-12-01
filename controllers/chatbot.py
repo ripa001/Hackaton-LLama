@@ -11,12 +11,13 @@ client = Groq(api_key=os.getenv("API_KEY_GROQ"))
 MODEL = "llama-3.1-8b-instant"
 # MODEL = "llama-3.1-70b-versatile"
 
+
 my_local_tools = [
     {
         "type": "function",
         "function": {
             "name": "get_minor_price_shop",
-            "description": "Retrieves the document with the lowest price of a product, from already near-by shops. When you specify the product_name, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the product_name of the product you know. If you are sending any other information, think again and remove any information that is not product_name.",
+            "description": "Retrieves the document with the lowest price of a product, from already near-by shops. DO NOT WORRY ABOUT THE LOCALISATION, WE'LL CHECK THIS ON OUR END WITHIN THE TOOL! When you specify the product_name, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the product_name of the product you know. If you are sending any other information, think again and remove any information that is not product_name.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -72,10 +73,10 @@ def get_minor_price_shop(
             "$geoNear": {
                 "near": {
                     "type": "Point",
-                    "coordinates": [long, lat]
+                    "coordinates": [float(long), float(lat)]
                 },
                 "distanceField": "distance",
-                "maxDistance": 100000,
+                "maxDistance": 10000000,
                 "spherical": True
             }
         },
@@ -88,10 +89,13 @@ def get_minor_price_shop(
     ]))
 
     shop_infos = {s["_id"]: s for s in shop_ids}
-
     shop_ids = list(shop_infos.keys())
 
-    prods = list(mongo.mongo["products"].aggregate([
+    print("shop_infos", len(shop_infos), shop_infos[shop_ids[0]])
+    print("shop_ids", shop_ids)
+    print("product_name_in_italian", f'"{product_name_in_italian}"')
+
+    aggregate = [
         {
             "$match": {
                 "store_id": {"$in": shop_ids},
@@ -99,47 +103,55 @@ def get_minor_price_shop(
         },
         {
             "$match": {
-                "full_name": {"$regex": f".*{product_name_in_italian}.*"}
+                "full_name": {"$regex": product_name_in_italian.lower().strip(), "$options": "imxs"}
             }
         },
         {
             "$sort": {"price": 1}
         },
         {
-            "$limit": 3
+            "$limit": 5
         },
         {
             "$project": {"_id": 1, "store_id": 1, "price": 1, "full_name": 1, "description": 1}
         }
-    ]))
+    ]
+    print("aggregate", aggregate)
+
+    prods = list(mongo.mongo["products"].aggregate(aggregate))
 
     # if not len(prods):
     #     prods = get_minor_price_shop_vector(product_name_in_italian)
 
     for p in prods:
+        p["distance"] = shop_infos[p["store_id"]]["distance"]    
+        p["zip_code"] = shop_infos[p["store_id"]]["zip_code"]
+        p["city"] = shop_infos[p["store_id"]]["city"]
+        p["street"] = shop_infos[p["store_id"]]["street"]
+        p["working_hours"] = shop_infos[p["store_id"]]["working_hours"]
+
         p["_id"] = str(p["_id"])
-        p["distance"] = shop_infos[p["store_id"]]["distance"]
         p["store_id"] = str(p["store_id"])
 
     return str(prods)
 
 
-def get_minor_price_shop_vector(product_name: str) -> str:
+# def get_minor_price_shop_vector(product_name: str) -> str:
 
-    vector = vectors.get_text_embedding(product_name)
+#     vector = vectors.get_text_embedding(product_name)
 
-    wanted_fields = ["_id", "full_name", "price", "store_id", "lat", "long"]
+#     wanted_fields = ["_id", "full_name", "price", "store_id", "lat", "long"]
 
-    docs = mongo.vector_search(vector, mongo.mongo["prods"], limit=10, projects={k: 1 for k in wanted_fields})
+#     docs = mongo.vector_search(vector, mongo.mongo["prods"], limit=10, projects={k: 1 for k in wanted_fields})
 
-    docs.sort(key=lambda x: x["price"])
+#     docs.sort(key=lambda x: x["price"])
 
-    for d in docs:
-        d["_id"] = str(d["_id"])
-        d["store_id"] = str(d["store_id"])
-        d["distance"] = ((d["lat"] - 0) ** 2 + (d["long"] - 0) ** 2) ** 0.5
+#     for d in docs:
+#         d["_id"] = str(d["_id"])
+#         d["store_id"] = str(d["store_id"])
+#         d["distance"] = ((d["lat"] - 0) ** 2 + (d["long"] - 0) ** 2) ** 0.5
 
-    return docs[:3]
+#     return docs[:3]
 
 
 @th.register_local_tool("get_nearest_supermarket")
