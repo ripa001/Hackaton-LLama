@@ -8,8 +8,8 @@ from lib  import mongo, vectors
 
 th = Toolhouse()
 client = Groq(api_key=os.getenv("API_KEY_GROQ"))
-MODEL = "llama-3.1-8b-instant"
-# MODEL = "llama-3.1-70b-versatile"
+# MODEL = "llama-3.1-8b-instant"
+MODEL = "llama-3.1-70b-versatile"
 
 my_local_tools = [
     {
@@ -55,6 +55,26 @@ my_local_tools = [
                 ],
                 "additionalProperties": False
             },
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_ingredients_and_recipe",
+            "description": "Retrieves the ingredients and the recipe of a given dish. When you specify the dish_name, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the dish_name of the dish you know. If you are sending any other information, think again and remove any information that is not dish_name.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dish_name": {
+                        "type": "string",
+                        "description": "The name of the dish the user is looking for.",
+                    }
+                },
+                "required": [
+                    "dish_name",
+                ],
+                "additionalProperties": False
+            }
         }
     }
 ]
