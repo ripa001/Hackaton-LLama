@@ -60,13 +60,17 @@ async def receive_message(body: bodyMessage):
 	# messages = [{"role": "user", "content": message}]
 	messages.append({"role": "user", "content": message})
 	print("tool_run", tool_run)
-	messages.extend(tool_run)
+	mess_to_llm = messages + tool_run
+	if len(tool_run) > 0:
+		messages.append({"role": "tool", "content": tool_run[-1]["content"]})
+	messages.append({"role": "assistant", "content": response.choices[0].message.content})
 
 	response = client.chat.completions.create(
 		model=MODEL,
 		messages=messages,
 		# tools=th.get_tools(),
 	)
+
 	messages.append( {"role": "assistant", "content": response.choices[0].message.content})
 	print(messages)
 	upsert_user_chat(messages, user)
