@@ -103,9 +103,7 @@ def get_minor_price_shop(
             }
         },
         {
-            "$sort": {
-                "price": 1
-            }
+            "$sort": {"price": 1}
         },
         {
             "$limit": 3
