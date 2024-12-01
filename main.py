@@ -64,12 +64,16 @@ IMPORTANT: Do not care about the user location, we will provide this information
 """}]
 
 	messages.append({"role": "user", "content": message})
-
-	response = client.chat.completions.create(
-		model=MODEL,
-		messages=messages,
-		tools=th.get_tools() + my_local_tools,
-	)
+	try:
+		response = client.chat.completions.create(
+			model=MODEL,
+			messages=messages,
+			tools=th.get_tools() + my_local_tools,
+		)
+	
+	except Exception as e:
+		print("Error", e)
+		return {"message": "I'm sorry we finished token for free demo"}
 	selected_call = None
 	if response.choices[0].finish_reason == "tool_calls":
 
@@ -105,10 +109,14 @@ IMPORTANT: Do not care about the user location, we will provide this information
 	if selected_call and selected_call.function.name == "get_cheapest_list_of_products":
 		messages.append({"role": "user", "content": "Make a balanced choice between the cheapest products and the distance to the store and suggest to the user a unique store where to buy the products."})
 	selected_call = None
-	response = client.chat.completions.create(
-		model=MODEL,
-		messages=messages,
-	)
+	try:
+		response = client.chat.completions.create(
+			model=MODEL,
+			messages=messages,
+		)
+	except Exception as e:
+		print("Error", e)
+		return {"message": "I'm sorry we finished token for free demo"}
 
 	messages.append( {"role": "assistant", "content": response.choices[0].message.content})
 
