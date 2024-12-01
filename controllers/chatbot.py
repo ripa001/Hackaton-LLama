@@ -8,7 +8,8 @@ from lib.mongo import mongo
 
 th = Toolhouse()
 client = Groq(api_key=os.getenv("API_KEY_GROQ"))
-MODEL = "llama-3.1-70b-versatile"
+MODEL = "llama-3.1-8b-instant"
+# MODEL = "llama-3.1-70b-versatile"
 
 my_local_tools = [
         {

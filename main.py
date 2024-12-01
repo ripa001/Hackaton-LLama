@@ -38,7 +38,6 @@ async def receive_message(body: bodyMessage):
 	user = body.userId
 
 	chat = get_user_chat(user)
-	print(chat)
 	if chat:
 		messages = chat["chat"]
 	else:
@@ -55,7 +54,6 @@ async def receive_message(body: bodyMessage):
 	# Runs the Code Execution tool, gets the result,
 	# and appends it to the context
 	tool_run = th.run_tools(response)
-	print(tool_run)
 	# Appends the user message to the context
 	# messages = [{"role": "user", "content": message}]
 	messages.append({"role": "user", "content": message})
@@ -67,6 +65,7 @@ async def receive_message(body: bodyMessage):
 		# tools=th.get_tools(),
 	)
 	messages.append( {"role": "assistant", "content": response.choices[0].message.content})
+	print(messages)
 	upsert_user_chat(messages, user)
 
 	return {"message": response.choices[0].message.content}
