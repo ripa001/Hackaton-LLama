@@ -55,18 +55,11 @@ async def receive_message(body: bodyMessage):
 		# a tool
 		tools=th.get_tools() + my_local_tools,
 	)
-	# Runs the Code Execution tool, gets the result,
-	# and appends it to the context
 	tool_run = th.run_tools(response)
-	# Appends the user message to the context
-	# messages = [{"role": "user", "content": message}]
-	# messages.append({"role": "user", "content": message})
-	print("tool_run", tool_run)
 	mess_to_llm = messages + tool_run
 	if len(tool_run) > 0:
 		# TODO check role
 		messages.append({"role": "user", "content": tool_run[-1]["content"]})
-	# messages.append({"role": "assistant", "content": response.choices[0].message.content})
 
 	response = client.chat.completions.create(
 		model=MODEL,
