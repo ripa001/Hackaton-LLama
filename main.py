@@ -4,12 +4,13 @@ from lib.mongo import retrieve_product_by_id, get_user_chat, upsert_user_chat
 import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import json
 
 class bodyMessage(BaseModel): 
-	message: str
-	latitude: float
-	longitude: float
-	userId: str
+    message: str
+    latitude: float
+    longitude: float
+    userId: str
 
 app = fastapi.FastAPI()
 
@@ -30,83 +31,103 @@ app.add_middleware(
 
 @app.post("/message")
 async def receive_message(body: bodyMessage):
-	# Process the message and coordinates here
-	# return {"message": message, "latitude": latitude, "longitude": longitude}
-	message = body.message
-	latitude = body.latitude
-	longitude = body.longitude
-	user = body.userId
+    # Process the message and coordinates here
+    # return {"message": message, "latitude": latitude, "longitude": longitude}
+    message = body.message
+    latitude = body.latitude
+    longitude = body.longitude
+    user = body.userId
 
-	chat = get_user_chat(user)
+    chat = get_user_chat(user)
 
-	print("User chat", chat)
-	if chat:
-		messages = chat["chat"]
-	else:
-		messages = []
-		
+    print("User chat", chat)
+    if chat:
+        messages = chat["chat"]
+    else:
+        messages = [{"role": "system", "content": """\
+You are an helpfull assistant helping users to find cheap products from local stores. \
+The customers want those products as cheap as possible, but still caring about the distance to the store. \
+So, you should help them to find the store that has the cheapest product and is near to them, possibibly balancing the two depending on the your judgement. \
+Any other question from the users are to be ignored, and invite the user to don't go off topic. \
+Do not care about the user location, we will provide this information to the various tools you can use. \
+"""}]
 
-	# print(messages)
-	messages.append({"role": "user", "content": message})
-	messages.append({"role": "user", "content": f"User Position: latitude: {latitude}, longitude: {longitude}"})
-	response = client.chat.completions.create(
-		model=MODEL,
-		messages=messages,
-		# messages=[{"role": "user", "content": message}],
-		# Passes Code Execution as
-		# a tool
-		tools=th.get_tools() + my_local_tools,
-	)
-	tool_run = th.run_tools(response)
-	mess_to_llm = messages + tool_run
-	if len(tool_run) > 0:
-		# TODO check role
-		messages.append({"role": "user", "content": tool_run[-1]["content"]})
 
-	response = client.chat.completions.create(
-		model=MODEL,
-		messages=mess_to_llm,
-		# tools=th.get_tools(),
-	)
+    # print(messages)
+    messages.append({"role": "user", "content": message})
+    # messages.append({"role": "user", "content": f"User Position: latitude: {latitude}, longitude: {longitude}"})
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=messages,
+        # messages=[{"role": "user", "content": message}],
+        # Passes Code Execution as
+        # a tool
+        tools=th.get_tools() + my_local_tools,
+    )
 
-	messages.append( {"role": "assistant", "content": response.choices[0].message.content})
-	print(messages)
-	upsert_user_chat(messages, user)
+    if response.choices[0].finish_reason == "tool_calls":
 
-	return {"message": messages[-1]["content"]}
+        for tool_call in response.choices[0].message.tool_calls:
+            if tool_call.function.name == "get_minor_price_shop":
+
+                tool_call.function.arguments = json.loads(tool_call.function.arguments)
+                ## TODO: ovverride the lat and long in the tool call
+                tool_call.function.arguments["lat"] = latitude
+                tool_call.function.arguments["long"] = longitude
+                tool_call.function.arguments = json.dumps(tool_call.function.arguments)
+                print("tool_call", tool_call)
+
+    tool_run = th.run_tools(response)
+    mess_to_llm = messages + tool_run
+
+    if len(tool_run) > 0:
+        # TODO check role
+        messages.append({"role": "user", "content": tool_run[-1]["content"]})
+
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=mess_to_llm,
+        # tools=th.get_tools(),
+    )
+
+    messages.append( {"role": "assistant", "content": response.choices[0].message.content})
+    print(messages)
+    upsert_user_chat(messages, user)
+
+    return {"message": messages[-1]["content"]}
 
 @app.get("/product/{product_id}")
 async def get_product(product_id: str):
-	# Logic to retrieve product by id
-	product = retrieve_product_by_id(product_id)
-	if product:
-		product["_id"] = str(product["_id"])
-		product["store_id"] = str(product["store_id"])
-		return product
-	else:
-		raise fastapi.HTTPException(status_code=404, detail="Product not found")
+    # Logic to retrieve product by id
+    product = retrieve_product_by_id(product_id)
+    if product:
+        product["_id"] = str(product["_id"])
+        product["store_id"] = str(product["store_id"])
+        return product
+    else:
+        raise fastapi.HTTPException(status_code=404, detail="Product not found")
 
-	# return {"message": message}
+    # return {"message": message}
 
 
-	# response = client.chat.completions.create(
-	#     model=MODEL,
-	#     messages=messages,
-	#     # Passes Code Execution as a tool
-	#     tools=th.get_tools() + my_local_tools,
-	#     )
+    # response = client.chat.completions.create(
+    #     model=MODEL,
+    #     messages=messages,
+    #     # Passes Code Execution as a tool
+    #     tools=th.get_tools() + my_local_tools,
+    #     )
 
-	# # Runs the Code Execution tool, gets the result, 
-	# # and appends it to the context
-	# tool_run = th.run_tools(response)
-	# print(tool_run)
-	# messages.extend(tool_run)
+    # # Runs the Code Execution tool, gets the result, 
+    # # and appends it to the context
+    # tool_run = th.run_tools(response)
+    # print(tool_run)
+    # messages.extend(tool_run)
 
-	# response = client.chat.completions.create(
-	# model=MODEL,
-	# messages=messages,
-	# #   tools=th.get_tools(),
-	# )
+    # response = client.chat.completions.create(
+    # model=MODEL,
+    # messages=messages,
+    # #   tools=th.get_tools(),
+    # )
 
-	# print(response.choices[0].message.content)
+    # print(response.choices[0].message.content)
 

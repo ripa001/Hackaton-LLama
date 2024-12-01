@@ -12,7 +12,7 @@ def get_db():
     return db
 
 
-def vector_search(vector: List[float], mongo_coll: Collection, limit: int = 1, projects: dict = {"_id": 1, "vector" : 0}, limit_winning: bool = False):
+def vector_search(vector: List[float], mongo_coll: Collection, limit: int = 1, projects: dict = {"_id": 1, "vector" : 0}):
 
 	projects["score"] = {"$meta": "vectorSearchScore"}
 
