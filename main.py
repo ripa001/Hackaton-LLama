@@ -15,8 +15,8 @@ class bodyMessage(BaseModel):
 class UserBody(BaseModel):
 	userId: str
 
-
 mongo["users"].delete_many({})
+
 
 
 app = fastapi.FastAPI()

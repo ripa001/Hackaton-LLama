@@ -9,8 +9,8 @@ from lib  import mongo, vectors
 th = Toolhouse()
 client = Groq(api_key=os.getenv("API_KEY_GROQ"))
 # MODEL = "llama-3.1-8b-instant"
-# MODEL = "llama-3.1-70b-versatile"
-MODEL = "llama3-70b-8192"
+MODEL = "llama-3.1-70b-versatile"
+# MODEL = "llama3-70b-8192"
 
 
 my_local_tools = [
