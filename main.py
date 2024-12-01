@@ -104,7 +104,7 @@ IMPORTANT: Do not care about the user location, we will provide this information
 
 	if selected_call.function.name == "get_cheapest_list_of_products":
 		messages.append({"role": "user", "content": "Make a balanced choice between the cheapest products and the distance to the store and suggest to the user a unique store where to buy the products."})
-
+	selected_call = None
 	response = client.chat.completions.create(
 		model=MODEL,
 		messages=messages,
