@@ -61,7 +61,7 @@ my_local_tools = [
     {
         "type": "function",
         "function": {
-            "name": "get_ingredients_and_recipe",
+            "name": "get_ingredients_and_recipe_of_dish",
             "description": "Retrieves the ingredients and the recipe of a given dish. When you specify the dish_name, IT IS CRUCIAL THAT YOU DO NOT SPECIFY ANYTHING ELSE. Before you use this tool, ensure that you only send the dish_name of the dish you know. If you are sending any other information, think again and remove any information that is not dish_name.",
             "parameters": {
                 "type": "object",
@@ -144,8 +144,9 @@ def get_minor_price_shop(
     #     prods = get_minor_price_shop_vector(product_name_in_italian)
 
     for p in prods:
+        print("shop_infos[p[store_id]]", shop_infos[p["store_id"]])
         p["distance"] = shop_infos[p["store_id"]]["distance"]    
-        p["zip_code"] = shop_infos[p["store_id"]]["zip_code"]
+        # p["zip_code"] = shop_infos[p["store_id"]]["zip_code"]
         p["city"] = shop_infos[p["store_id"]]["city"]
         p["street"] = shop_infos[p["store_id"]]["street"]
         p["working_hours"] = shop_infos[p["store_id"]]["working_hours"]
@@ -178,22 +179,26 @@ def get_minor_price_shop(
 def get_nearest_supermarket(
     # Must match the name of the parameters in your tool definition
     latitude: float, longitude: float) -> str:
-    data = list(mongo.mongo["stores"].aggregate([
+    # data = list(mongo.mongo["stores"].aggregate([
+    shop_ids = list(mongo.mongo["stores"].aggregate([
         {
             "$geoNear": {
                 "near": {
                     "type": "Point",
-                    "coordinates": [longitude, latitude]
+                    "coordinates": [float(longitude), float(latitude)]
                 },
                 "distanceField": "distance",
-                "maxDistance": 10000,
+                "maxDistance": 10000000,
                 "spherical": True
             }
         },
         {
-            "$limit": 1
+            "$limit": 10
+        },
+        {
+            "$project": {"_id": 1, "distance": 1, "working_hours": 1, "city": 1, "zip_code": 1, "street": 1}
         }
     ]))
-
-    return str(data)
+    print("shop_ids", shop_ids)
+    return str(list(shop_ids))
 
